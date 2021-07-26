@@ -148,6 +148,12 @@ defmodule Wallaby.HTTPClient do
     [{"Accept", "application/json"}, {"Content-Type", "application/json"}]
   end
 
+  def default_headers_map do
+    Enum.map_reduce(default_headers(), %{}, fn {key, value}, headers_map ->
+      Map.put(headers_map, key, value)
+    end)
+  end
+
   @spec to_params(Query.compiled()) :: map
   def to_params({:xpath, xpath}) do
     %{using: "xpath", value: xpath}
