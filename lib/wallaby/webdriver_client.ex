@@ -325,8 +325,8 @@ defmodule Wallaby.WebdriverClient do
   Visit a specific page.
   """
   @spec visit(Session.t(), String.t()) :: :ok
-  def visit(session, path) do
-    with {:ok, resp} <- request(:post, "#{session.url}/url", %{url: path}),
+  def visit(session, path, headers \\ default_headers()) do
+    with {:ok, resp} <- request(:post, "#{session.url}/url", %{url: path}, [], headers),
          {:ok, _} <- Map.fetch(resp, "value"),
          do: :ok
   end

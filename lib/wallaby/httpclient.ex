@@ -13,7 +13,6 @@ defmodule Wallaby.HTTPClient do
   @status_obscured 13
   # The maximum time we'll sleep is for 50ms
   @max_jitter 50
-  @default_headers [{"Accept", "application/json"}, {"Content-Type", "application/json"}]
 
   @doc """
   Sends a request to the webdriver API and parses the
@@ -24,7 +23,7 @@ defmodule Wallaby.HTTPClient do
           | {:error, web_driver_error_reason | Jason.DecodeError.t() | String.t()}
           | no_return
 
-  def request(method, url, params \\ %{}, opts \\ [], headers \\ @default_headers)
+  def request(method, url, params \\ %{}, opts \\ [], headers \\ default_headers())
 
   def request(method, url, params, _opts, headers) when map_size(params) == 0 do
     make_request(method, url, "", headers)
@@ -145,8 +144,8 @@ defmodule Wallaby.HTTPClient do
     Application.get_env(:wallaby, :hackney_options, hackney: [pool: :wallaby_pool])
   end
 
-  defp default_headers do
-
+  def default_headers do
+    [{"Accept", "application/json"}, {"Content-Type", "application/json"}]
   end
 
   @spec to_params(Query.compiled()) :: map
