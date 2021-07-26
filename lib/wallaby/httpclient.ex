@@ -13,6 +13,7 @@ defmodule Wallaby.HTTPClient do
   @status_obscured 13
   # The maximum time we'll sleep is for 50ms
   @max_jitter 50
+  @default_headers [{"Accept", "application/json"}, {"Content-Type", "application/json"}]
 
   @doc """
   Sends a request to the webdriver API and parses the
@@ -23,41 +24,41 @@ defmodule Wallaby.HTTPClient do
           | {:error, web_driver_error_reason | Jason.DecodeError.t() | String.t()}
           | no_return
 
-  def request(method, url, params \\ %{}, opts \\ [])
+  def request(method, url, params \\ %{}, opts \\ [], headers \\ @default_headers)
 
-  def request(method, url, params, _opts) when map_size(params) == 0 do
-    make_request(method, url, "")
+  def request(method, url, params, _opts, headers) when map_size(params) == 0 do
+    make_request(method, url, "", headers)
   end
 
-  def request(method, url, params, [{:encode_json, false} | _]) do
-    make_request(method, url, params)
+  def request(method, url, params, [{:encode_json, false} | _], headers) do
+    make_request(method, url, params, headers)
   end
 
-  def request(method, url, params, _opts) do
-    make_request(method, url, Jason.encode!(params))
+  def request(method, url, params, _opts, headers) do
+    make_request(method, url, Jason.encode!(params), headers)
   end
 
-  defp make_request(method, url, body), do: make_request(method, url, body, 0, [])
+  defp make_request(method, url, body, headers), do: make_request(method, url, body, headers, 0, [])
 
-  @spec make_request(method, url, String.t() | map, non_neg_integer(), [String.t()]) ::
+  @spec make_request(method, url, String.t() | map, List.t(), non_neg_integer(), [String.t()]) ::
           {:ok, response}
           | {:error, web_driver_error_reason | Jason.DecodeError.t() | String.t()}
           | no_return
-  defp make_request(_, _, _, 5, retry_reasons) do
+  defp make_request(_, _, _, _, 5, retry_reasons) do
     ["Wallaby had an internal issue with HTTPoison:" | retry_reasons]
     |> Enum.uniq()
     |> Enum.join("\n")
     |> raise
   end
 
-  defp make_request(method, url, body, retry_count, retry_reasons) do
+  defp make_request(method, url, body, headers, retry_count, retry_reasons) do
     method
-    |> HTTPoison.request(url, body, headers(), request_opts())
+    |> HTTPoison.request(url, body, headers, request_opts())
     |> handle_response
     |> case do
       {:error, :httpoison, error} ->
         :timer.sleep(jitter())
-        make_request(method, url, body, retry_count + 1, [inspect(error) | retry_reasons])
+        make_request(method, url, body, headers, retry_count + 1, [inspect(error) | retry_reasons])
 
       result ->
         result
@@ -144,8 +145,8 @@ defmodule Wallaby.HTTPClient do
     Application.get_env(:wallaby, :hackney_options, hackney: [pool: :wallaby_pool])
   end
 
-  defp headers do
-    [{"Accept", "application/json"}, {"Content-Type", "application/json"}]
+  defp default_headers do
+
   end
 
   @spec to_params(Query.compiled()) :: map
