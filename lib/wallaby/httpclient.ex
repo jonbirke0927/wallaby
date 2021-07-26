@@ -149,7 +149,7 @@ defmodule Wallaby.HTTPClient do
   end
 
   def default_headers_map do
-    Enum.map_reduce(default_headers(), %{}, fn {key, value}, headers_map ->
+    Enum.reduce(default_headers(), %{}, fn {key, value}, headers_map ->
       Map.put(headers_map, key, value)
     end)
   end
