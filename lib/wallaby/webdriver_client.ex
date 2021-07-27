@@ -421,10 +421,18 @@ defmodule Wallaby.WebdriverClient do
   """
   @spec set_cookie(Session.t(), String.t(), String.t()) :: {:ok, []}
   def set_cookie(session, key, value) do
+    send_set_cookie_request(session, %{name: key, value: value})
+  end
+
+  def set_cookie(session, key, value, domain) do
+    send_set_cookie_request(session, %{name: key, value: value, domain: domain})
+  end
+
+  defp send_set_cookie_request(session, params) do
     with {:ok, resp} <-
-           request(:post, "#{session.url}/cookie", %{cookie: %{name: key, value: value}}),
-         {:ok, value} <- Map.fetch(resp, "value"),
-         do: {:ok, value}
+      request(:post, "#{session.url}/cookie", %{cookie: params}),
+    {:ok, value} <- Map.fetch(resp, "value"),
+    do: {:ok, value}
   end
 
   @doc """
