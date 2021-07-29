@@ -406,6 +406,13 @@ defmodule Wallaby.WebdriverClient do
          do: decoded_value
   end
 
+  def take_screenshot_of_element(session, element_id) do
+    with {:ok, resp} <- request(:get, "#{session.session_url}/element/#{element_id}/screenshot"),
+         {:ok, value} <- Map.fetch(resp, "value"),
+         decoded_value <- :base64.decode(value),
+         do: decoded_value
+  end
+
   @doc """
   Gets the cookies for a session.
   """
